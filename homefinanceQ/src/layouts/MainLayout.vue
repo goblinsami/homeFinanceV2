@@ -37,7 +37,7 @@
           :events="filteredExpenses().map((el) => el.date)"
           mask="YYYY-MM-DD"
           :value="date2"
-          :event-color="test()"
+          :event-color="setEventsColors()"
         />
       </article>
     </div>
@@ -83,7 +83,8 @@
       </div>
     </article>
     <!-- LIST -->
-    <ExpensesList :data="filteredExpenses()" @delete-item="computeExpenses()" />
+    <ExpensesList :key="key2" :data="expenses" @delete-item="deleteItem" />
+    <q-btn flat label="+" @click="sortExpenses" />
   </section>
 </template>
 
@@ -122,6 +123,8 @@ export default {
       date2: this.$moment().format("YYYY-MM-DD"),
 
       key: 0,
+      key2: 0,
+
       number: 0,
       delivery: 10,
       expenses_amount: 0,
@@ -165,7 +168,19 @@ export default {
 
   computed: {
     //  ...mapGetters("expenses", ["getExpenses"]),
+    /*     sortedExpenses() {
+      const arr = this.filteredExpenses().map((el) =>
+        this.$moment(el.date, "YYYY/MM/DD")
+      );
+      const sortedArray = arr.sort((a, b) => a.diff(b));
+      const sortedExpenses = sortedArray.map((m) => {
+        return this.filteredExpenses().find((el) =>
+          this.$moment(el.date, "YYYY/MM/DD").isSame(m)
+        );
+      });
 
+      return sortedExpenses;
+    }, */
     computedEvents() {
       return this.expenses
         .map((el) => el.date)
@@ -179,9 +194,14 @@ export default {
     },
   },
   watch: {
+ /*    expenses: {
+      handler() {
+        this.sortExpenses();
+      },
+    }, */
     computedFilters: {
       handler() {
-        this.testChangeColor(this.computedFilters);
+        this.setChartColors(this.computedFilters);
         this.key += 1;
         if (this.computedFilters.length === 0) {
           this.setDoughNutChart();
@@ -197,19 +217,22 @@ export default {
   methods: {
     ...mapMutations("expenses", ["SET_TOTAL_AMOUNT", "SET_EXPENSES"]),
     ...mapActions("expenses", ["action_updateExpenses"]),
-    sortExpensesByDate() {
-      console.log(
-        this.filteredExpenses().map((el) => this.$moment(el.date, "YYYY-MM-DD"))
-      );
 
-      let arr = this.filteredExpenses().map((el) =>
-        this.$moment(el.date, "YYYY-MM-DD")
+    sortExpenses() {
+      const arr = this.expenses.map((el) =>
+        this.$moment(el.date, "YYYY/MM/DD")
       );
       const sortedArray = arr.sort((a, b) => a.diff(b));
-
-      console.log(sortedArray);
+      const sortedExpenses = sortedArray.map((m) => {
+        return this.expenses.find((el) =>
+          this.$moment(el.date, "YYYY/MM/DD").isSame(m)
+        );
+      });
+      this.expenses = sortedExpenses;
+   //   this.key2 = +1;
+      return sortedExpenses;
     },
-    test() {
+    setEventsColors() {
       let value;
       if (this.computedFilters[0] === "Comida a Domicilio") {
         value = "warning";
@@ -225,7 +248,7 @@ export default {
 
       return value;
     },
-    testChangeColor(filters) {
+    setChartColors(filters) {
       const defaultColors = {
         "Comida a Domicilio": "#F2C037",
         Supermercado: "#9C27B0",
@@ -268,7 +291,10 @@ export default {
 
     init() {
       this.expenses = this.getExpenses;
+      this.sortExpenses();
       this.computeExpenses();
+
+
     },
     setActive(button, index) {
       if (button.onOff) {
@@ -294,38 +320,7 @@ export default {
 
       return result;
     },
-    setCategoryFilter(category) {
-      if (category === "Comida a Domicilio") {
-        this.categoryFilter.delivery = !this.categoryFilter.delivery;
-      } else if (category === "Supermercado") {
-        this.categoryFilter.market = !this.categoryFilter.market;
-      } else if (category === "Restaurante") {
-        this.categoryFilter.restaurant = !this.categoryFilter.restaurant;
-      } else if (category === "Hogar") {
-        this.categoryFilter.home = !this.categoryFilter.home;
-      } else if (category === "Facturas") {
-        this.categoryFilter.bills = !this.categoryFilter.bills;
-      }
-    },
 
-    filterButtonColor(category, index) {
-      if (this.categoryFilter.delivery === true) {
-        return "teal";
-      } else {
-        return "green";
-      }
-    },
-    computedEventsColor(events) {
-      let value;
-      events.forEach((el) => {
-        if (el == "2023/02/15") {
-          value = "teal";
-        } else {
-          value = "orange";
-        }
-      });
-      return value;
-    },
     setDoughNutChart() {
       let optionsNames = CATEGORIES2.map((el) => el.name);
       let optionsColors = CATEGORIES2.map((el) => el.color);
@@ -375,17 +370,22 @@ export default {
       }
       this.setDoughNutChart();
       this.key += 1;
+            this.key2 += 1;
+
     },
-    deleteItem(index) {
-      this.expenses.splice(index, 1);
+    deleteItem(val) {
+      this.expenses.splice(val, 1);
       this.expenses_amount = 0;
       this.SET_EXPENSES(this.expenses);
       this.computeExpenses();
     },
+
+    /*         <q-btn @click="sortByPrice()" icon="euro"/>
+     */
     addItem() {
       this.expenses_amount = 0;
-      let key = null
-     key = Math.random().toString(36).substring(2, 7);
+      let key = null;
+      key = Math.random().toString(36).substring(2, 7);
       if (this.price && this.category) {
         this.expenses.push({
           price: this.price,
@@ -393,10 +393,12 @@ export default {
           concept: this.concept,
           date: this.date,
 
-       key: key,
+          // key: key,
         });
+        this.sortExpenses()
         this.SET_EXPENSES(this.expenses);
         this.computeExpenses();
+        //this.key2 = +1;
       } else {
         alert("campo vacío");
       }

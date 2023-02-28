@@ -1,10 +1,9 @@
 <template>
   <article>
-    <q-btn @click="sortByPrice()" icon="euro"/>
     <q-list bordered separator>
       <q-item
         :key="expense.key"
-        v-for="expense in sortedExpenses"
+        v-for="(expense, index) in expenses"
         clickable
         v-ripple
         :style="categoryStyle(expense)"
@@ -19,7 +18,7 @@
           >
         </q-item-section>
         <q-item-section side>
-          <q-btn @click="deleteItem(expense)" color="gray" label="x" flat
+          <q-btn @click="deleteItem(index)" color="gray" label="x" flat
         /></q-item-section>
       </q-item>
     </q-list>
@@ -36,21 +35,7 @@ export default {
     };
   },
 
-  computed: {
-    sortedExpenses() {
-      const arr = this.expenses.map((el) =>
-        this.$moment(el.date, "YYYY/MM/DD")
-      );
-      const sortedArray = arr.sort((a, b) => a.diff(b));
-      const sortedExpenses = sortedArray.map((m) => {
-        return this.expenses.find((el) =>
-          this.$moment(el.date, "YYYY/MM/DD").isSame(m)
-        );
-      });
-
-      return sortedExpenses;
-    },
-  },
+  computed: {},
   name: "ExpensesList",
   props: {
     data: {
@@ -60,19 +45,6 @@ export default {
   },
   methods: {
     ...mapMutations("expenses", ["SET_TOTAL_AMOUNT", "SET_EXPENSES"]),
-
-/*     created() {
-      this.expenses.sort((a, b) =>
-        this.$moment(a.date, "YYYY-MM-DD").diff(
-          this.$moment(b.date, "YYYY-MM-DD")
-        )
-      );
-    }, */
-
-
-    sortByPrice() {
-
-    },
 
     categoryStyle(expense) {
       if (expense.category === "Comida a Domicilio") {
@@ -87,14 +59,8 @@ export default {
         return "background-color: rgba(65, 184, 131, 0.4)";
       }
     },
-    deleteItem(expense) {
-      const expenseFound = this.expenses.find((e) => e.key === expense.key);
-      const index = this.expenses.indexOf(expenseFound);
-      this.expenses.splice(index, 1);
-      this.expenses_amount = 0;
-      this.SET_EXPENSES(this.expenses);
-      this.$emit("delete-item");
-      //this.computeExpenses();
+    deleteItem(index) {
+      this.$emit("delete-item", index);
     },
   },
 };
