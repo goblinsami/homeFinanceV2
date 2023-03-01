@@ -12,48 +12,19 @@
     </article>
     <!-- EXPENSE AMOUNT, TOGGLE CALENDAR -->
     <article class="row justify-center">
-      <div class="q-my-md text-h5">{{ expenses_amount }} €</div>
-      <q-btn flat icon="calendar_month" @click="showCalendar = !showCalendar" />
+      <div class="q-my-md text-h5 text-bold">
+        {{ currentMonth }}
+      </div>
+      <div class="q-my-md text-h5 q-px-sm">{{ expenses_amount }} €</div>
     </article>
-    <!-- DOUGHNUT -->
-
-    <div class="row justify-center">
-      <article>
-        <Doughnut
-          :key="key"
-          :width="250"
-          :height="250"
-          :chart-data="chartData"
-          v-if="!emptyChart"
-          class="q-px-md"
-        />
-        <h5 v-else style="color: gray">Añade gastos</h5>
-        <q-btn @click="sortExpensesByDate()" />
-      </article>
-      <!-- CALENDAR -->
-      <article class="row justify-center q-my-md">
-        <q-date
-          minimal
-          :events="filteredExpenses().map((el) => el.date)"
-          mask="YYYY-MM-DD"
-          :value="date2"
-          :event-color="setEventsColors()"
-          @navigation="(a) => changeMonth(a)"
-        />
-      </article>
-    </div>
-
-    <article class="q-my-md row justify-center">
-      <q-btn-group>
-        <q-btn
-          v-for="(button, index) in buttons"
-          :key="index"
-          :color="button.color"
-          :label="button.label"
-          @click="setActive(button, index)"
-        ></q-btn>
-      </q-btn-group>
-    </article>
+    <q-btn
+      :label="!showCalendar ? 'Ocultar' : ''"
+      :icon="showCalendar ? 'visibility' : 'visibility_off'"
+      flat
+      @click="showCalendar = !showCalendar"
+      color="grey"
+      size="sm"
+    />
     <!-- INPUTS -->
     <article class="q-px-lg" v-if="!showCalendar">
       <q-input v-model="price" label="Añade Gastos €" type="number" />
@@ -79,13 +50,58 @@
         </template>
       </q-input>
 
-      <div class="row justify-center q-my-md">
-        <q-btn flat label="+" @click="addItem" />
+      <div class="row justify-center q-my-sm">
+        <q-btn outline style="color: gray" label="+" @click="addItem" />
       </div>
     </article>
+    <!-- DOUGHNUT -->
+
+    <div class="q-py-md row justify-center">
+      <article>
+        <Doughnut
+          :key="key"
+          :width="250"
+          :height="250"
+          :chart-data="chartData"
+          v-if="!emptyChart"
+          class="q-px-md"
+        />
+        <h5 v-else style="color: gray">Añade gastos</h5>
+        <!--   <q-btn @click="sortExpensesByDate()" /> -->
+      </article>
+      <!-- CALENDAR -->
+      <article class="row justify-center q-py-md q-my-sm">
+        <q-date
+          minimal
+          :events="filteredExpenses().map((el) => el.date)"
+          mask="YYYY-MM-DD"
+          :value="date2"
+          :event-color="setEventsColors()"
+          @navigation="(a) => changeMonth(a)"
+        />
+      </article>
+    </div>
+    <article class="q-px-xs row justify-center">
+      <q-btn
+        v-for="(button, index) in buttons"
+        :key="index"
+        :color="button.color"
+        :style="`color:${button.bg}`"
+        :label="button.label"
+        @click="setActive(button, index)"
+        class="q-ma-sm"
+      />
+
+    </article>
+
     <!-- LIST -->
-    <q-btn flat label="€ Ordenar por precio" @click="sortExpensesByPrice" />
-    <ExpensesList :key="key2" :data="expenses" @delete-item="deleteItem" />
+    <article style="min-width: 200px" class="q-py-md">
+      <ExpensesList
+        :key="key2"
+        :data="filteredExpenses()"
+        @delete-item="deleteItem"
+      />
+    </article>
   </section>
 </template>
 
@@ -102,6 +118,9 @@ export default {
   },
   data() {
     return {
+      currentMonth: null,
+      currentMonthNumber: this.$moment().month(),
+
       categoryFilter: {
         delivery: false,
         market: false,
@@ -109,8 +128,6 @@ export default {
         home: false,
         bills: false,
       },
-      model: "one",
-
       events: [
         "2023/02/01",
         "2023/02/05",
@@ -120,8 +137,8 @@ export default {
       ],
 
       showCalendar: false,
-      date: "2023/02/08",
-      date2: this.$moment().format("YYYY-MM-DD"),
+      date: this.$moment().format("YYYY/MM/DD"),
+      date2: this.$moment().format("YYYY/MM/DD"),
 
       key: 0,
       key2: 0,
@@ -140,28 +157,33 @@ export default {
       buttons: [
         {
           label: "Comida a Domicilio",
-          color: "secondary",
+          color: "warning",
           onOff: "false",
+          bg: "#F2C037",
         },
         {
           label: "Supermercado",
-          color: "secondary",
+          color: "accent",
           onOff: "false",
+          bg: "#F2C037",
         },
         {
           label: "Restaurante",
-          color: "secondary",
+          color: "info",
           onOff: "false",
+          bg: "#F2C037",
         },
         {
           label: "Hogar",
-          color: "secondary",
+          color: "negative",
           onOff: "false",
+          bg: "#F2C037",
         },
         {
           label: "Facturas",
-          color: "secondary",
+          color: "positive",
           onOff: "false",
+          bg: "#F2C037",
         },
       ],
     };
@@ -195,7 +217,11 @@ export default {
     },
   },
   watch: {
-
+    /*    expenses: {
+      handler() {
+        this.sortExpensesByDate();
+      },
+    }, */
     computedFilters: {
       handler() {
         this.setChartColors(this.computedFilters);
@@ -209,19 +235,31 @@ export default {
   created() {
     this.init();
     this.setDoughNutChart();
+    this.setMonth();
   },
 
   methods: {
     ...mapMutations("expenses", ["SET_TOTAL_AMOUNT", "SET_EXPENSES"]),
     ...mapActions("expenses", ["action_updateExpenses"]),
 
-    changeMonth(month) {
-      console.log(a);
-      let array = this.expenses.map((el) => el.price);
-
-      console.log(array);
+    setMonth() {
+      this.currentMonth = this.$moment()
+        .month(this.currentMonthNumber)
+        .format("MMMM");
     },
 
+    changeMonth(month) {
+      console.log(month);
+      this.expenses_amount = 0;
+      this.currentMonthNumber = month.month - 1;
+
+      this.setMonth();
+      console.log(this.currentMonthNumber);
+      this.computeExpenses();
+    },
+    testSortMonth() {
+      this.currentMonthNumber = 1;
+    },
     sortExpensesByPrice() {
       console.log(this.expenses);
 
@@ -237,9 +275,9 @@ export default {
           this.$moment(el.date, "YYYY/MM/DD").isSame(m)
         );
       });
-     /*  this.expenses = sortedExpenses; */
+      /*  this.expenses = sortedExpenses; */
       //   this.key2 = +1;
-  return sortedExpenses;
+      return sortedExpenses;
     },
     setEventsColors() {
       let value;
@@ -300,32 +338,47 @@ export default {
 
     init() {
       this.expenses = this.getExpenses;
-      this.expenses = this.sortExpensesByDate();
+      // this.expenses = this.sortExpensesByDate();
       this.computeExpenses();
     },
     setActive(button, index) {
+      let array = [
+        'warning',
+        'accent',
+        'info',
+        'negative',
+        'positive'
+      ]
       if (button.onOff) {
-        this.buttons[index].color = "teal-9";
+        console.log(button, index)
+        this.buttons[index].color = "grey";
         this.buttons[index].onOff = false;
       } else {
-        this.buttons[index].color = "secondary";
+        this.buttons[index].color = array[index];
         this.buttons[index].onOff = true;
       }
     },
 
     filteredExpenses() {
+      let current = this.currentMonthNumber;
 
-
+      let array = this.expenses.filter(
+        (el) => this.$moment(el.date, "YYYY/MM/DD").month() === current
+      );
+      let storeArray = this.getExpenses.filter(
+        (el) => this.$moment(el.date, "YYYY/MM/DD").month() === current
+      );
       let result = [];
       let filters = this.buttons
         .filter((el) => !el.onOff)
         .map((el) => el.label);
-      result = this.expenses.filter((expense) =>
-        filters.includes(expense.category)
-      );
+      result = array.filter((expense) => filters.includes(expense.category));
       if (this.computedFilters.length === 0) {
-        result = this.getExpenses;
+        result = storeArray;
       }
+
+      /* this.filteredExpenses().filter(el =>  this.$moment(el.date, "YYYY/MM/DD").month() === current)
+       */
 
       return result;
     },
@@ -335,10 +388,10 @@ export default {
       let optionsColors = CATEGORIES2.map((el) => el.color);
 
       this.chartData.labels = optionsNames;
-
+      let arr = this.filteredExpenses();
       let data = [];
       optionsNames.forEach((el) => {
-        let element = this.expenses
+        let element = arr
           .filter((exp) => exp.category === el)
           .map((el) => parseInt(el.price))
           .reduce((acc, curr) => acc + curr, 0);
@@ -374,8 +427,13 @@ export default {
       }
     },
     computeExpenses() {
-      for (let i = 0; i < this.expenses.length; i++) {
-        this.expenses_amount += parseFloat(this.expenses[i]["price"]);
+      let current = this.currentMonthNumber;
+
+      let arr = this.expenses.filter(
+        (el) => this.$moment(el.date, "YYYY/MM/DD").month() === current
+      );
+      for (let i = 0; i < arr.length; i++) {
+        this.expenses_amount += parseFloat(arr[i]["price"]);
       }
       this.setDoughNutChart();
       this.key += 1;
@@ -393,17 +451,16 @@ export default {
     addItem() {
       this.expenses_amount = 0;
       //key = Math.random().toString(36).substring(2, 7);
-      let price = JSON.parse(JSON.stringify(this.price))
-      let category = JSON.parse(JSON.stringify(this.category))
-      let concept = JSON.parse(JSON.stringify(this.concept))
+      let price = JSON.parse(JSON.stringify(this.price));
+      let category = JSON.parse(JSON.stringify(this.category));
+      let concept = JSON.parse(JSON.stringify(this.concept));
 
       const expense = {
-           price: this.price,
-          category: this.category,
-          concept: this.concept,
-          date: this.date,
-
-      }
+        price: this.price,
+        category: this.category,
+        concept: this.concept,
+        date: this.date,
+      };
 
       if (this.price && this.category) {
         this.expenses.push(expense);
@@ -414,9 +471,9 @@ export default {
         alert("campo vacío");
       }
 
-      this.expenses = this.sortExpensesByDate();
-        //this.sortExpensesByDate();
-/*       setTimeout(() => {
+      // this.expenses = this.sortExpensesByDate();
+      //this.sortExpensesByDate();
+      /*       setTimeout(() => {
 
       }, 100); */
     },

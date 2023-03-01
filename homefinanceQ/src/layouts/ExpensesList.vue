@@ -1,9 +1,8 @@
 <template>
-  <article>
     <q-list bordered separator>
       <q-item
         :key="expense.key"
-        v-for="(expense, index) in expenses"
+        v-for="(expense, index) in data"
         clickable
         v-ripple
         :style="categoryStyle(expense)"
@@ -22,7 +21,6 @@
         /></q-item-section>
       </q-item>
     </q-list>
-  </article>
 </template>
 
 <script>
