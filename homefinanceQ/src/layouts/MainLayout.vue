@@ -38,6 +38,7 @@
           mask="YYYY-MM-DD"
           :value="date2"
           :event-color="setEventsColors()"
+          @navigation="(a) => changeMonth(a)"
         />
       </article>
     </div>
@@ -83,8 +84,8 @@
       </div>
     </article>
     <!-- LIST -->
+    <q-btn flat label="€ Ordenar por precio" @click="sortExpensesByPrice" />
     <ExpensesList :key="key2" :data="expenses" @delete-item="deleteItem" />
-    <q-btn flat label="+" @click="sortExpenses" />
   </section>
 </template>
 
@@ -194,11 +195,7 @@ export default {
     },
   },
   watch: {
- /*    expenses: {
-      handler() {
-        this.sortExpenses();
-      },
-    }, */
+
     computedFilters: {
       handler() {
         this.setChartColors(this.computedFilters);
@@ -218,7 +215,19 @@ export default {
     ...mapMutations("expenses", ["SET_TOTAL_AMOUNT", "SET_EXPENSES"]),
     ...mapActions("expenses", ["action_updateExpenses"]),
 
-    sortExpenses() {
+    changeMonth(month) {
+      console.log(a);
+      let array = this.expenses.map((el) => el.price);
+
+      console.log(array);
+    },
+
+    sortExpensesByPrice() {
+      console.log(this.expenses);
+
+      alert("hola");
+    },
+    sortExpensesByDate() {
       const arr = this.expenses.map((el) =>
         this.$moment(el.date, "YYYY/MM/DD")
       );
@@ -228,9 +237,9 @@ export default {
           this.$moment(el.date, "YYYY/MM/DD").isSame(m)
         );
       });
-      this.expenses = sortedExpenses;
-   //   this.key2 = +1;
-      return sortedExpenses;
+     /*  this.expenses = sortedExpenses; */
+      //   this.key2 = +1;
+  return sortedExpenses;
     },
     setEventsColors() {
       let value;
@@ -291,10 +300,8 @@ export default {
 
     init() {
       this.expenses = this.getExpenses;
-      this.sortExpenses();
+      this.expenses = this.sortExpensesByDate();
       this.computeExpenses();
-
-
     },
     setActive(button, index) {
       if (button.onOff) {
@@ -307,6 +314,8 @@ export default {
     },
 
     filteredExpenses() {
+
+
       let result = [];
       let filters = this.buttons
         .filter((el) => !el.onOff)
@@ -370,8 +379,7 @@ export default {
       }
       this.setDoughNutChart();
       this.key += 1;
-            this.key2 += 1;
-
+      this.key2 += 1;
     },
     deleteItem(val) {
       this.expenses.splice(val, 1);
@@ -384,24 +392,33 @@ export default {
      */
     addItem() {
       this.expenses_amount = 0;
-      let key = null;
-      key = Math.random().toString(36).substring(2, 7);
-      if (this.price && this.category) {
-        this.expenses.push({
-          price: this.price,
+      //key = Math.random().toString(36).substring(2, 7);
+      let price = JSON.parse(JSON.stringify(this.price))
+      let category = JSON.parse(JSON.stringify(this.category))
+      let concept = JSON.parse(JSON.stringify(this.concept))
+
+      const expense = {
+           price: this.price,
           category: this.category,
           concept: this.concept,
           date: this.date,
 
-          // key: key,
-        });
-        this.sortExpenses()
+      }
+
+      if (this.price && this.category) {
+        this.expenses.push(expense);
         this.SET_EXPENSES(this.expenses);
         this.computeExpenses();
         //this.key2 = +1;
       } else {
         alert("campo vacío");
       }
+
+      this.expenses = this.sortExpensesByDate();
+        //this.sortExpensesByDate();
+/*       setTimeout(() => {
+
+      }, 100); */
     },
   },
 };
