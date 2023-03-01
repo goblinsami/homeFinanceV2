@@ -94,7 +94,7 @@
 
     </article>
 
-    <!-- LIST -->
+    <!-- LIST - aas-->
     <article style="min-width: 200px" class="q-py-md">
       <ExpensesList
         :key="key2"
