@@ -91,7 +91,6 @@
         @click="setActive(button, index)"
         class="q-ma-sm"
       />
-
     </article>
 
     <!-- LIST - aasdd-->
@@ -109,9 +108,13 @@
 import { mapGetters, mapMutations, mapActions } from "vuex";
 import Doughnut from "src/layouts/Doughnut.vue";
 import { CATEGORIES2 } from "src/consts";
+import main from "src/mixins/main.mixin";
+import axios from "axios";
 
 export default {
   name: "MainLayout",
+  mixins: [main],
+
   components: {
     Doughnut,
     ExpensesList: () => import("src/layouts/ExpensesList.vue"),
@@ -121,30 +124,12 @@ export default {
       currentMonth: null,
       currentMonthNumber: this.$moment().month(),
 
-      categoryFilter: {
-        delivery: false,
-        market: false,
-        restaurant: false,
-        home: false,
-        bills: false,
-      },
-      events: [
-        "2023/02/01",
-        "2023/02/05",
-        "2023/02/06",
-        "2023/02/09",
-        "2023/02/23",
-      ],
-
       showCalendar: false,
       date: this.$moment().format("YYYY/MM/DD"),
       date2: this.$moment().format("YYYY/MM/DD"),
 
       key: 0,
       key2: 0,
-
-      number: 0,
-      delivery: 10,
       expenses_amount: 0,
       price: "",
       concept: "",
@@ -190,20 +175,6 @@ export default {
   },
 
   computed: {
-    //  ...mapGetters("expenses", ["getExpenses"]),
-    /*     sortedExpenses() {
-      const arr = this.filteredExpenses().map((el) =>
-        this.$moment(el.date, "YYYY/MM/DD")
-      );
-      const sortedArray = arr.sort((a, b) => a.diff(b));
-      const sortedExpenses = sortedArray.map((m) => {
-        return this.filteredExpenses().find((el) =>
-          this.$moment(el.date, "YYYY/MM/DD").isSame(m)
-        );
-      });
-
-      return sortedExpenses;
-    }, */
     computedEvents() {
       return this.expenses
         .map((el) => el.date)
@@ -236,6 +207,8 @@ export default {
     this.init();
     this.setDoughNutChart();
     this.setMonth();
+  // this._getExpensesFromDB();
+   /*  this.testGoogleApi() */
   },
 
   methods: {
@@ -247,6 +220,22 @@ export default {
         .month(this.currentMonthNumber)
         .format("MMMM");
     },
+
+ async testGoogleApi() {
+const sheetId = '17Pv9shY-CmubpF4S7VvRnhH-aaoIh2ql51zHzLsPY0U';
+const base = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?`;
+const sheetName = 'DB';
+const query = encodeURIComponent('Select *')
+const url = `${base}&sheet=${sheetName}&tq=${query}`
+let resp = await axios.get(url)
+
+console.log(JSON.parse(resp.data.substring(47).slice(0, -2)).table.rows)
+
+
+  //const SHEET_ID = '17Pv9shY-CmubpF4S7VvRnhH-aaoIh2ql51zHzLsPY0U'
+
+
+  },
 
     changeMonth(month) {
       console.log(month);
@@ -336,21 +325,15 @@ export default {
       return result;
     },
 
-    init() {
-      this.expenses = this.getExpenses;
+    async init() {
+      this.expenses = await this._getExpensesFromDB()
       // this.expenses = this.sortExpensesByDate();
       this.computeExpenses();
     },
     setActive(button, index) {
-      let array = [
-        'warning',
-        'accent',
-        'info',
-        'negative',
-        'positive'
-      ]
+      let array = ["warning", "accent", "info", "negative", "positive"];
       if (button.onOff) {
-        console.log(button, index)
+        console.log(button, index);
         this.buttons[index].color = "grey";
         this.buttons[index].onOff = false;
       } else {
@@ -365,7 +348,7 @@ export default {
       let array = this.expenses.filter(
         (el) => this.$moment(el.date, "YYYY/MM/DD").month() === current
       );
-      let storeArray = this.getExpenses.filter(
+      let storeArray = this.expenses.filter(
         (el) => this.$moment(el.date, "YYYY/MM/DD").month() === current
       );
       let result = [];
@@ -373,6 +356,7 @@ export default {
         .filter((el) => !el.onOff)
         .map((el) => el.label);
       result = array.filter((expense) => filters.includes(expense.category));
+
       if (this.computedFilters.length === 0) {
         result = storeArray;
       }
@@ -439,16 +423,19 @@ export default {
       this.key += 1;
       this.key2 += 1;
     },
-    deleteItem(val) {
-      this.expenses.splice(val, 1);
+    async deleteItem(expense) {
+      /*       this.expenses.splice(val, 1);
       this.expenses_amount = 0;
       this.SET_EXPENSES(this.expenses);
-      this.computeExpenses();
+      this.computeExpenses(); */
+
+      await this._deleteExpenseFromDB(expense.id);
+          this.expenses_amount = 0;
+      await this.init();
     },
 
-    /*         <q-btn @click="sortByPrice()" icon="euro"/>
-     */
-    addItem() {
+    /* ORIGINAL */
+    /*     addItem() {
       this.expenses_amount = 0;
       //key = Math.random().toString(36).substring(2, 7);
       let price = JSON.parse(JSON.stringify(this.price));
@@ -470,12 +457,18 @@ export default {
       } else {
         alert("campo vacío");
       }
+    }, */
+    /* TO API */
+    async addItem() {
+      const expense = {
+        price: this.price,
+        category: this.category,
+        concept: this.concept,
+        date: this.date,
+      };
 
-      // this.expenses = this.sortExpensesByDate();
-      //this.sortExpensesByDate();
-      /*       setTimeout(() => {
-
-      }, 100); */
+      await this._createExpense(expense);
+      await this.init();
     },
   },
 };

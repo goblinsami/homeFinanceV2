@@ -1,7 +1,7 @@
 <template>
     <q-list bordered separator>
       <q-item
-        :key="expense.key"
+        :key="index"
         v-for="(expense, index) in data"
         clickable
         v-ripple
@@ -17,7 +17,7 @@
           >
         </q-item-section>
         <q-item-section side>
-          <q-btn @click="deleteItem(index)" color="gray" label="x" flat
+          <q-btn @click="deleteItem(expense)" color="gray" label="x" flat
         /></q-item-section>
       </q-item>
     </q-list>
@@ -57,8 +57,23 @@ export default {
         return "background-color: rgba(65, 184, 131, 0.4)";
       }
     },
-    deleteItem(index) {
-      this.$emit("delete-item", index);
+    deleteItem(expense) {
+      this.$emit("delete-item", expense);
+    },
+
+        sortExpensesByDate() {
+      const arr = this.expenses.map((el) =>
+        this.$moment(el.date, "YYYY/MM/DD")
+      );
+      const sortedArray = arr.sort((a, b) => a.diff(b));
+      const sortedExpenses = sortedArray.map((m) => {
+        return this.expenses.find((el) =>
+          this.$moment(el.date, "YYYY/MM/DD").isSame(m)
+        );
+      });
+      /*  this.expenses = sortedExpenses; */
+      //   this.key2 = +1;
+      return sortedExpenses;
     },
   },
 };
