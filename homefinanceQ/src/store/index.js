@@ -1,6 +1,8 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import expenses from "./expenses";
+import auth from "./auth";
+
 import createPersistedState from "vuex-persistedstate";
 
 // import example from './module-example'
@@ -20,7 +22,8 @@ Vue.use(require("vue-moment"));
 export default function (/* { ssrContext } */) {
   const Store = new Vuex.Store({
     modules: {
-      expenses
+      expenses,
+      auth
     },
 
     // enable strict mode (adds overhead!)

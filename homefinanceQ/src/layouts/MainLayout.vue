@@ -5,11 +5,15 @@
       style="background-color: #e0e0e0"
       class="row justify-center items-center"
     >
-      <div class="text-h5">
+      <div class="text-h5 text-bold text-positive">
         Home Finance
-        <q-icon name="house" size="lg" />
+        <q-icon name="house" size="lg" color="positive" />
       </div>
     </article>
+    <div class="row justify-end">
+      <q-btn @click="_logout()" style="padding: 1px" flat :color="'grey-7'" icon="logout" size="xs" />
+    </div>
+
     <!-- EXPENSE AMOUNT, TOGGLE CALENDAR -->
     <article class="row justify-center">
       <div class="q-my-md text-h5 text-bold">
@@ -110,10 +114,11 @@ import Doughnut from "src/layouts/Doughnut.vue";
 import { CATEGORIES2 } from "src/consts";
 import main from "src/mixins/main.mixin";
 import axios from "axios";
+import auth from "src/mixins/auth.mixin";
 
 export default {
   name: "MainLayout",
-  mixins: [main],
+  mixins: [main, auth],
 
   components: {
     Doughnut,
@@ -207,8 +212,8 @@ export default {
     this.init();
     this.setDoughNutChart();
     this.setMonth();
-  // this._getExpensesFromDB();
-   /*  this.testGoogleApi() */
+    // this._getExpensesFromDB();
+    /*  this.testGoogleApi() */
   },
 
   methods: {
@@ -221,21 +226,18 @@ export default {
         .format("MMMM");
     },
 
- async testGoogleApi() {
-const sheetId = '17Pv9shY-CmubpF4S7VvRnhH-aaoIh2ql51zHzLsPY0U';
-const base = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?`;
-const sheetName = 'DB';
-const query = encodeURIComponent('Select *')
-const url = `${base}&sheet=${sheetName}&tq=${query}`
-let resp = await axios.get(url)
+    async testGoogleApi() {
+      const sheetId = "17Pv9shY-CmubpF4S7VvRnhH-aaoIh2ql51zHzLsPY0U";
+      const base = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?`;
+      const sheetName = "DB";
+      const query = encodeURIComponent("Select *");
+      const url = `${base}&sheet=${sheetName}&tq=${query}`;
+      let resp = await axios.get(url);
 
-console.log(JSON.parse(resp.data.substring(47).slice(0, -2)).table.rows)
+      console.log(JSON.parse(resp.data.substring(47).slice(0, -2)).table.rows);
 
-
-  //const SHEET_ID = '17Pv9shY-CmubpF4S7VvRnhH-aaoIh2ql51zHzLsPY0U'
-
-
-  },
+      //const SHEET_ID = '17Pv9shY-CmubpF4S7VvRnhH-aaoIh2ql51zHzLsPY0U'
+    },
 
     changeMonth(month) {
       console.log(month);
@@ -326,7 +328,7 @@ console.log(JSON.parse(resp.data.substring(47).slice(0, -2)).table.rows)
     },
 
     async init() {
-      this.expenses = await this._getExpensesFromDB()
+      this.expenses = await this._getExpensesFromDB();
       // this.expenses = this.sortExpensesByDate();
       this.computeExpenses();
     },
@@ -430,7 +432,7 @@ console.log(JSON.parse(resp.data.substring(47).slice(0, -2)).table.rows)
       this.computeExpenses(); */
 
       await this._deleteExpenseFromDB(expense.id);
-          this.expenses_amount = 0;
+      this.expenses_amount = 0;
       await this.init();
     },
 
