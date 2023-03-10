@@ -11,7 +11,14 @@
       </div>
     </article>
     <div class="row justify-end">
-      <q-btn @click="_logout()" style="padding: 1px" flat :color="'grey-7'" icon="logout" size="xs" />
+      <q-btn
+        @click="_logout()"
+        style="padding: 1px"
+        flat
+        :color="'grey-7'"
+        icon="logout"
+        size="xs"
+      />
     </div>
 
     <!-- EXPENSE AMOUNT, TOGGLE CALENDAR -->
@@ -44,7 +51,7 @@
               transition-show="scale"
               transition-hide="scale"
             >
-              <q-date v-model="date">
+              <q-date first-day-of-week="1" v-model="date">
                 <div class="row items-center justify-end">
                   <q-btn v-close-popup label="Close" color="primary" flat />
                 </div>
@@ -71,7 +78,6 @@
           class="q-px-md"
         />
         <h5 v-else style="color: gray">Añade gastos</h5>
-        <!--   <q-btn @click="sortExpensesByDate()" /> -->
       </article>
       <!-- CALENDAR -->
       <article class="row justify-center q-py-md q-my-sm">
@@ -82,6 +88,7 @@
           :value="date2"
           :event-color="setEventsColors()"
           @navigation="(a) => changeMonth(a)"
+          first-day-of-week="1"
         />
       </article>
     </div>
@@ -99,6 +106,16 @@
 
     <!-- LIST - aasdd-->
     <article style="min-width: 200px" class="q-py-md">
+      <q-btn
+        class="q-ma-xs"
+        outline
+        style="color: gray"
+        size="xs"
+        @click="sortExpensesByPrice()"
+        icon="euro"
+      >
+        <q-tooltip> Ordenar por precio </q-tooltip>
+      </q-btn>
       <ExpensesList
         :key="key2"
         :data="filteredExpenses()"
@@ -126,6 +143,8 @@ export default {
   },
   data() {
     return {
+      setPriceFilter: false,
+      orderbyPrice: false,
       currentMonth: null,
       currentMonthNumber: this.$moment().month(),
 
@@ -252,9 +271,10 @@ export default {
       this.currentMonthNumber = 1;
     },
     sortExpensesByPrice() {
-      console.log(this.expenses);
-
-      alert("hola");
+      console.log(this.expenses.map((el) => el.price).sort((a, b) => a - b));
+      console.log(this.expenses.map((el) => el.price).sort((a, b) => b - a));
+      this.setPriceFilter = true;
+      this.orderbyPrice = !this.orderbyPrice;
     },
     sortExpensesByDate() {
       const arr = this.expenses.map((el) =>
@@ -362,11 +382,20 @@ export default {
       if (this.computedFilters.length === 0) {
         result = storeArray;
       }
+      let sortedArray = result.sort((a, b) =>
+        this.$moment(a.date).diff(this.$moment(b.date))
+      );
+      if (this.setPriceFilter) {
+        if (this.orderbyPrice) {
+          console.log("sort asc");
+          sortedArray = result.sort((a, b) => a.price - b.price);
+        } else {
+         sortedArray = result.sort((a, b) => b.price - a.price);
+          console.log("sort desc");
+        }
+      }
 
-      /* this.filteredExpenses().filter(el =>  this.$moment(el.date, "YYYY/MM/DD").month() === current)
-       */
-
-      return result;
+      return sortedArray;
     },
 
     setDoughNutChart() {
@@ -426,41 +455,11 @@ export default {
       this.key2 += 1;
     },
     async deleteItem(expense) {
-      /*       this.expenses.splice(val, 1);
-      this.expenses_amount = 0;
-      this.SET_EXPENSES(this.expenses);
-      this.computeExpenses(); */
-
       await this._deleteExpenseFromDB(expense.id);
       this.expenses_amount = 0;
       await this.init();
     },
 
-    /* ORIGINAL */
-    /*     addItem() {
-      this.expenses_amount = 0;
-      //key = Math.random().toString(36).substring(2, 7);
-      let price = JSON.parse(JSON.stringify(this.price));
-      let category = JSON.parse(JSON.stringify(this.category));
-      let concept = JSON.parse(JSON.stringify(this.concept));
-
-      const expense = {
-        price: this.price,
-        category: this.category,
-        concept: this.concept,
-        date: this.date,
-      };
-
-      if (this.price && this.category) {
-        this.expenses.push(expense);
-        this.SET_EXPENSES(this.expenses);
-        this.computeExpenses();
-        //this.key2 = +1;
-      } else {
-        alert("campo vacío");
-      }
-    }, */
-    /* TO API */
     async addItem() {
       const expense = {
         price: this.price,
