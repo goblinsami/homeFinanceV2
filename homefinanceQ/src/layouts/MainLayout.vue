@@ -443,13 +443,14 @@ export default {
     },
     computeExpenses() {
       let current = this.currentMonthNumber;
-
       let arr = this.expenses.filter(
         (el) => this.$moment(el.date, "YYYY/MM/DD").month() === current
       );
-      for (let i = 0; i < arr.length; i++) {
+/*       console.log(arr.map(el => el.price).reduce((a,b) => a + b, 0)) */
+      this.expenses_amount = arr.map(el => el.price).reduce((a, b) => a + b, 0)
+ /*      for (let i = 0; i < arr.length; i++) {
         this.expenses_amount += parseFloat(arr[i]["price"]);
-      }
+      } */
       this.setDoughNutChart();
       this.key += 1;
       this.key2 += 1;
